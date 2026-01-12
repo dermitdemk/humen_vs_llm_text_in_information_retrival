@@ -8,13 +8,17 @@ import numpy as np
 from tqdm import tqdm
 
 def bm25_implement(query:list[str],n:int,bm25,df)->pd.DataFrame:
-    """makes a querry and returns the numeber of korretkt matches is the top k
+    """
+    Makes a query and returns the number of correct matches in the top k
 
     Args:
-        query (list of str): 
-        n (int): how many documents retreved
+        query (list of str): Query terms 
+        n (int): How many documents retrieved
+        bm25: BM25 model 
+        df (pd.DataFrame): DataFrame 
+
     Return:
-        pd.DataFrame: a dataframe with the top n articles for that querry
+        pd.DataFrame: a dataframe with the top n articles for that query
     """
     #df_tags = df[['tags']].copy()
     df_with_score = df.copy()
@@ -29,6 +33,20 @@ def bm25_implement(query:list[str],n:int,bm25,df)->pd.DataFrame:
 
 def bm25(modus:Literal['content','summary','content_and_summary','llm_text'],
          querrys:list[str],n:int,df:pd.DataFrame)->list:
+    """
+    Run BM25 retrieval for multiple queries on a selected text field of the dataframe.
+
+    Args:
+    - modus (Literal): Text source to use for retrieval
+    - querrys (list with str): List of queries
+    - n (int): Number of top documents to retrieve per query
+    - df (pd.DataFrame): Dataframe containing the text
+
+    Returns:
+    - list: A list of lists, where the inner list contains the dataframe indices
+            of the top retrieved documents for the corresponding query
+    """
+    
 
     if modus == 'content':
         courpus = df['content']
@@ -63,6 +81,20 @@ def bm25(modus:Literal['content','summary','content_and_summary','llm_text'],
             
 def bi_encoder(modus:Literal['content','summary','content_and_summary','llm_text'],
          querrys:list[str],n:int,df:pd.DataFrame)->list:
+    """
+    Retrieve and rerank documents for multiple queries using a bi-encoder + cross-encoder
+    pipeline.
+
+    Args:
+    - modus (Literal): Text source to use for retrieval
+    - querrys (list with str): List of queries
+    - n (int): Number of top documents to retrieve per query
+    - df (pd.DataFrame): Dataframe containing the text
+
+    Returns:
+    - list: A list of lists, where the inner list contains the dataframe indices
+            of the top retrieved documents for the corresponding query
+"""
 
     if modus == 'content':
         courpus = df['content']
@@ -97,6 +129,15 @@ def bi_encoder(modus:Literal['content','summary','content_and_summary','llm_text
     
 
 def creat_document_embeddings(corpus):
+    """
+    Create document embeddings and a faiss index from the text corpus.
+
+    Args:
+    - corpus: Collection of texts
+
+    Returns:
+    - tuple: faiss Index and SentenceTransformer
+    """
     model = SentenceTransformer('intfloat/multilingual-e5-small',device='cpu')
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to('cpu')
@@ -107,11 +148,11 @@ def creat_document_embeddings(corpus):
     return index, model
 
 def embed_querry(querry,model):
-        # empdes the querry with the same model es the coprus
+        # embeds the query with the same model es the coprus
         return model.encode([querry])
 
 def get_k_kanidates(querry_embedding,k,embeddings):
-        ## retrive k kanidates which then get reanked
+        ## retrieve k canidates which then get reranked
         #querry_embedding = embed_querry(querry)
         distances, index = embeddings.search(querry_embedding,k)
         return index
@@ -126,14 +167,16 @@ def rerank_the_articles (selected_articles,n,querry,reranker):
 
 
 
-##### evaluation #################ü
+##### Evaluation #################ü
 def position_of_article(results):
-    """gets the resutls dataframe and returs 2 list which are the possiton of the query in the content column and the llm colum
+    """
+    Gets the resulting dataframe and returns 2 lists, which are the possition of the query in the content column and the llm colum
 
     Args:
-        results (_type_): _description_
+    - results (_type_): _description_
+    
     Returns:
-    tupl(llm_postition, content_possiton): the possiton of the article in the llm and the content qurry
+    - tupl(llm_postition, content_possiton): The position of the article in the llm and the content query
     """
     def pos_in_list(l,q):
         if q not in l:
@@ -155,6 +198,18 @@ def position_of_article(results):
     return (llm_pos, content_pos)
 
 def number_of_tags_match(result,normelized=False):
+    """
+    Compute the number of matching tags between queries and retrieved document sets.
+
+    Args:
+    - result (pd.DataFrame): The dataframe 
+    - normelized (bool): If True, matches are weighted by inverse tag frequency.
+                         If False, simple match counts are used. (The default is false.)
+
+    Returns:
+    - tuple[list[float], list[float]]: The first list shows match scores for text retrieved via "llm_text" 
+                                       and the second list shows match scores for documents retrieved via "content".
+    """
     if isinstance(result.iloc[0]['querry'],str):
         result['querry'] = [eval(q) for q in result['querry']]
     tag_lookup = {i:t for i,t in zip(result.index,result['querry'])}
@@ -168,6 +223,7 @@ def number_of_tags_match(result,normelized=False):
         for i in l:
             tags = tag_lookup[i]
             match = set(tags).intersection(set(q))
+            # Tags that occur more frequently count less, rare tags count more
             if normelized == True:
                 addition_factor = sum([1/frequency_of_tags[m] for m in match])
                 
