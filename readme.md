@@ -27,7 +27,7 @@ The texts of news articles are revised, rewritten or sometimes even completely g
 
 In the "requirements.txt" file you can see a list of all dependencies needed to run the code.
 To reproduce our results, you first need to scrape the ["Tagesschau"](https://www.tagesschau.de) website using the "get_tageschau_links.ipynb" file to get the data. Then you can parse the resulting data into a pandas dataframe using the "tageschau_paster.ipynb" file.  
-After that, you can generate LLM summaries with the "bullets.py" file. Here you have to provide an API key for Hugging Face and also need to have a computer capable of running an LLM. Those summaries can then be converted into text again by the "bullets_to_text.py" file. For that, you also need the API key and a computer with the necessary power. 
+After that, you can generate LLM summaries with the "bullets.py" file. Here you have to provide an API key for Hugging Face and also need to have a computer capable of running an LLM. Those summaries can then be converted into text again by the "bullets_to_text.py" file. For that, you also need the API key and a computer with the necessary power.   
 For the mixed human-written and AI-generated text corpus, you can then use the "information_retrteval_pipeline.ipynb" file to run the BM25 and bi- and cross-encoder pipeline to retrieve the articles from the news article corpus by querying with the tags of an article.
 
 ## Dataset Description
