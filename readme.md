@@ -25,10 +25,6 @@ The texts of news articles are revised, rewritten or sometimes even completely g
 - information_retrieval_pipeline.py -> Retrieves top 5 articles with BM25 and bi- and cross-encoder pipeline.
 - run_information_retrieval_pipeline.ipynb -> Evaluates results and plots data.
 
-## Dataset
-
-cleaned_tagesschau_llm_text_1200_sample.csv is a sample of our dataset for quickstarting the reproduction of our results
-
 ## Reproduction of Results
 
 In the "requirements.txt" file you can see a list of all dependencies needed to run the code.
